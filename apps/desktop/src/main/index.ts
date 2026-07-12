@@ -15,6 +15,7 @@ import type { DbService } from "@lodestar/core";
 import { safeStorageBackend, fileSecretStorage } from "./secrets.js";
 import { createSettingsBridge } from "./settings-bridge.js";
 import type { SettingsBridge } from "./settings-bridge.js";
+import { listGpus } from "./gpu.js";
 import { acquireSingleInstance } from "./app-lifecycle.js";
 import { createMainWindow } from "./windows.js";
 import { registerIpcHandlers } from "./ipc.js";
@@ -100,7 +101,6 @@ async function bootstrap(): Promise<void> {
   logger.info("main.starting", { dataDir });
 
   dbService = createDbService(join(dataDir, "lodestar.sqlite3"));
-  const activeLogger = logger;
   if (dbService.status() === "ok") {
     logger.info("db.opened", { status: "ok" });
     bridge = createSettingsBridge({
@@ -110,9 +110,6 @@ async function bootstrap(): Promise<void> {
         fileSecretStorage(join(dataDir, "secrets")),
       ),
       journalCandidates: JOURNAL_CANDIDATES,
-      onConsentChange: (key, value) => {
-        activeLogger.warn("consent.changed", { key, value });
-      },
     });
   } else {
     logger.error("db.open-failed", { error: String(dbService.lastError()) });
@@ -135,6 +132,8 @@ async function bootstrap(): Promise<void> {
     setSetting: (req) => activeBridge.setSetting(req),
     autodetectJournal: () => activeBridge.autodetectJournal(),
     getSecretsPresence: () => activeBridge.secretsPresence(),
+    setSecret: (req) => activeBridge.setSecret(req),
+    listGpus,
   });
 
   app.on("will-quit", () => {

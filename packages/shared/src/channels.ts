@@ -36,12 +36,28 @@ export interface SecretsPresence {
   readonly discordWebhookUrl: boolean;
 }
 
+/** Secret write request — the value flows renderer→main only, never back. */
+export interface SecretsSetRequest {
+  readonly key: keyof SecretsPresence;
+  /** null clears the secret. */
+  readonly value: string | null;
+}
+
+export interface GpuInfo {
+  readonly index: number;
+  readonly uuid: string;
+  readonly name: string;
+  readonly memoryTotalMiB: number;
+}
+
 export interface ChannelPayloads {
   readonly "app.health": AppHealth;
   readonly "settings.get": SettingsSnapshot;
   readonly "settings.set": SettingsSnapshot;
   readonly "journal.autodetect": { readonly path: string | null };
   readonly "secrets.presence": SecretsPresence;
+  readonly "secrets.set": SecretsPresence;
+  readonly "system.gpus": readonly GpuInfo[];
 }
 
 const CHANNEL_SET = {
@@ -50,6 +66,8 @@ const CHANNEL_SET = {
   "settings.set": true,
   "journal.autodetect": true,
   "secrets.presence": true,
+  "secrets.set": true,
+  "system.gpus": true,
 } as const satisfies Record<keyof ChannelPayloads, true>;
 
 export type Channel = keyof ChannelPayloads;

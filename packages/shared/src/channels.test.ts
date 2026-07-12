@@ -8,8 +8,10 @@ describe("IPC channels", () => {
       "app.health",
       "journal.autodetect",
       "secrets.presence",
+      "secrets.set",
       "settings.get",
       "settings.set",
+      "system.gpus",
     ]);
   });
 

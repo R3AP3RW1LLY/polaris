@@ -1,15 +1,16 @@
 /**
  * Settings/secrets/journal bridge: the glue between the core services and the
  * IPC handlers, extracted from the app entry so it is unit-testable. Secret
- * VALUES never appear here (presence booleans only). Consent changes go through
- * an audit hook so there is a forensic trail (server-side "Privacy-panel-only"
- * enforcement lands in Step 10.5; until then the UI enforces read-only).
+ * VALUES never appear here (presence booleans only). Consent flags are
+ * read-only through setSetting — rejected server-side, not just in the UI; the
+ * Privacy panel (Step 10.5) owns consent writes.
  */
 
 import { DEFAULT_SETTINGS, locateJournalDir, validateJournalDir } from "@lodestar/core";
 import type { SecretsStore, SettingsService, SettingsKey, SecretKey } from "@lodestar/core";
 import type {
   SecretsPresence,
+  SecretsSetRequest,
   SettingsSetRequest,
   SettingsSnapshot,
   WireResult,
@@ -31,15 +32,16 @@ export interface SettingsBridgeDeps {
   readonly settings: SettingsService | undefined;
   readonly secrets: SecretsStore | undefined;
   readonly journalCandidates: () => readonly string[];
-  /** Called after a consent flag changes; used for the audit log. */
-  readonly onConsentChange?: (key: SettingsKey, value: boolean) => void;
 }
+
+const SECRET_KEYS = new Set<SecretKey>(["inaraApiKey", "capiTokens", "discordWebhookUrl"]);
 
 export interface SettingsBridge {
   getSettings: () => SettingsSnapshot;
   setSetting: (req: SettingsSetRequest) => WireResult<SettingsSnapshot>;
   autodetectJournal: () => { path: string | null };
   secretsPresence: () => SecretsPresence;
+  setSecret: (req: SecretsSetRequest) => WireResult<SecretsPresence>;
   probeJournal: () => "not-configured" | "ok" | "error";
 }
 
@@ -72,11 +74,20 @@ export function createSettingsBridge(deps: SettingsBridgeDeps): SettingsBridge {
       if (!SETTINGS_KEYS.includes(req.key)) {
         return toWireResult(err(domainError("settings.invalid-value", `unknown key "${req.key}"`)));
       }
+      // Consent flags are read-only through this path — enforced server-side,
+      // not just in the UI. The Privacy panel (Step 10.5) owns consent writes.
+      if (CONSENT_KEYS.has(req.key)) {
+        return toWireResult(
+          err(
+            domainError(
+              "settings.consent-readonly",
+              "consent flags are set only in the Privacy panel",
+            ),
+          ),
+        );
+      }
       const result = svc.set(req.key, req.value);
       if (!result.ok) return toWireResult(err(result.error));
-      if (CONSENT_KEYS.has(req.key) && typeof req.value === "boolean") {
-        deps.onConsentChange?.(req.key, req.value);
-      }
       return toWireResult(ok(snapshot()));
     },
 
@@ -99,6 +110,34 @@ export function createSettingsBridge(deps: SettingsBridgeDeps): SettingsBridge {
         capiTokens: present("capiTokens"),
         discordWebhookUrl: present("discordWebhookUrl"),
       };
+    },
+
+    setSecret(req: SecretsSetRequest): WireResult<SecretsPresence> {
+      const store = deps.secrets;
+      if (store === undefined) {
+        return toWireResult(err(domainError("secrets.unavailable", "secrets not initialized")));
+      }
+      if (!SECRET_KEYS.has(req.key)) {
+        return toWireResult(err(domainError("secrets.invalid-key", `unknown secret "${req.key}"`)));
+      }
+      if (req.value === null || req.value === "") {
+        store.delete(req.key);
+      } else {
+        const result = store.set(req.key, req.value);
+        if (!result.ok) return toWireResult(err(result.error));
+      }
+      // Return presence only — never echo the value back.
+      const present = (key: SecretKey): boolean => {
+        const r = store.get(key);
+        return r.ok && r.value !== null;
+      };
+      return toWireResult(
+        ok({
+          inaraApiKey: present("inaraApiKey"),
+          capiTokens: present("capiTokens"),
+          discordWebhookUrl: present("discordWebhookUrl"),
+        }),
+      );
     },
 
     probeJournal(): "not-configured" | "ok" | "error" {

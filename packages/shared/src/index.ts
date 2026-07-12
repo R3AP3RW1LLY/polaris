@@ -23,6 +23,8 @@ export type {
   SettingsSnapshot,
   SettingsSetRequest,
   SecretsPresence,
+  SecretsSetRequest,
+  GpuInfo,
   ChannelPayloads,
   Channel,
   Envelope,

@@ -8,7 +8,9 @@
 import type {
   AppHealth,
   Channel,
+  GpuInfo,
   SecretsPresence,
+  SecretsSetRequest,
   SettingsSetRequest,
   SettingsSnapshot,
   WireResult,
@@ -24,6 +26,8 @@ export interface LodestarApi {
   setSetting: (req: SettingsSetRequest) => Promise<SettingsSnapshot>;
   autodetectJournal: () => Promise<{ path: string | null }>;
   getSecretsPresence: () => Promise<SecretsPresence>;
+  setSecret: (req: SecretsSetRequest) => Promise<SecretsPresence>;
+  listGpus: () => Promise<readonly GpuInfo[]>;
 }
 
 export const EXPOSED_API_KEYS = [
@@ -32,6 +36,8 @@ export const EXPOSED_API_KEYS = [
   "setSetting",
   "autodetectJournal",
   "getSecretsPresence",
+  "setSecret",
+  "listGpus",
 ] as const satisfies readonly (keyof LodestarApi)[];
 
 function unwrap<T>(wire: WireResult<T>): T {
@@ -48,5 +54,7 @@ export function createLodestarApi(ipc: IpcInvoker): LodestarApi {
     setSetting: (req) => call<SettingsSnapshot>("settings.set", req),
     autodetectJournal: () => call<{ path: string | null }>("journal.autodetect"),
     getSecretsPresence: () => call<SecretsPresence>("secrets.presence"),
+    setSecret: (req) => call<SecretsPresence>("secrets.set", req),
+    listGpus: () => call<readonly GpuInfo[]>("system.gpus"),
   };
 }

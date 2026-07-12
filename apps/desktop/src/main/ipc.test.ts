@@ -26,13 +26,17 @@ const SNAPSHOT = {
   consentDiscord: false,
 } as const;
 
+const PRESENCE = { inaraApiKey: false, capiTokens: false, discordWebhookUrl: false } as const;
+
 function deps(over: Partial<Parameters<typeof registerIpcHandlers>[1]> = {}) {
   return {
     getHealth: () => ({ version: "0.1.0", dbStatus: "ok", journalStatus: "ok" }) as AppHealth,
     getSettings: () => SNAPSHOT,
     setSetting: () => ({ ok: true as const, value: SNAPSHOT }),
     autodetectJournal: () => ({ path: null }),
-    getSecretsPresence: () => ({ inaraApiKey: false, capiTokens: false, discordWebhookUrl: false }),
+    getSecretsPresence: () => PRESENCE,
+    setSecret: () => ({ ok: true as const, value: PRESENCE }),
+    listGpus: () => Promise.resolve([]),
     ...over,
   };
 }
@@ -45,8 +49,10 @@ describe("registerIpcHandlers", () => {
       "app.health",
       "journal.autodetect",
       "secrets.presence",
+      "secrets.set",
       "settings.get",
       "settings.set",
+      "system.gpus",
     ]);
   });
 

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -55,17 +55,46 @@ describe("settings bridge", () => {
     expect(bridge.setSetting({ key: "totally-unknown", value: "x" } as never).ok).toBe(false);
   });
 
-  it("fires the consent audit hook only on consent changes", () => {
-    const onConsentChange = vi.fn();
+  it("rejects consent writes server-side (read-only until the Privacy panel)", () => {
     const bridge = createSettingsBridge({
       settings: memSettings(),
       secrets: memSecrets(),
       journalCandidates: () => [],
-      onConsentChange,
     });
-    bridge.setSetting({ key: "consentWing", value: true });
-    bridge.setSetting({ key: "ollamaEndpoint", value: "http://127.0.0.1:11434" });
-    expect(onConsentChange).toHaveBeenCalledExactlyOnceWith("consentWing", true);
+    const r = bridge.setSetting({ key: "consentWing", value: true });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe("settings.consent-readonly");
+    // Non-consent settings still write fine.
+    expect(bridge.setSetting({ key: "ollamaEndpoint", value: "http://127.0.0.1:11434" }).ok).toBe(
+      true,
+    );
+  });
+
+  it("setSecret stores a value and returns presence (never echoes the value), and clears on null", () => {
+    const secrets = memSecrets();
+    const bridge = createSettingsBridge({
+      settings: memSettings(),
+      secrets,
+      journalCandidates: () => [],
+    });
+    const set = bridge.setSecret({ key: "inaraApiKey", value: "sk-LIVE-do-not-echo" });
+    expect(set.ok).toBe(true);
+    if (set.ok) {
+      expect(set.value.inaraApiKey).toBe(true);
+      expect(JSON.stringify(set.value)).not.toContain("sk-LIVE");
+    }
+    // Clearing with null removes it.
+    const cleared = bridge.setSecret({ key: "inaraApiKey", value: null });
+    expect(cleared.ok && cleared.value.inaraApiKey).toBe(false);
+  });
+
+  it("setSecret rejects an unknown key", () => {
+    const bridge = createSettingsBridge({
+      settings: memSettings(),
+      secrets: memSecrets(),
+      journalCandidates: () => [],
+    });
+    expect(bridge.setSecret({ key: "evil" as never, value: "x" }).ok).toBe(false);
   });
 
   it("secretsPresence exposes booleans only, never the secret values", () => {

@@ -8,7 +8,9 @@
 import type {
   AppHealth,
   Channel,
+  GpuInfo,
   SecretsPresence,
+  SecretsSetRequest,
   SettingsSetRequest,
   SettingsSnapshot,
   WireResult,
@@ -25,6 +27,8 @@ export interface IpcDeps {
   readonly setSetting: (req: SettingsSetRequest) => WireResult<SettingsSnapshot>;
   readonly autodetectJournal: () => { path: string | null };
   readonly getSecretsPresence: () => SecretsPresence;
+  readonly setSecret: (req: SecretsSetRequest) => WireResult<SecretsPresence>;
+  readonly listGpus: () => Promise<readonly GpuInfo[]>;
 }
 
 export function registerIpcHandlers(ipcMain: IpcMainLike, deps: IpcDeps): void {
@@ -51,5 +55,20 @@ export function registerIpcHandlers(ipcMain: IpcMainLike, deps: IpcDeps): void {
 
   ipcMain.handle("secrets.presence", (): WireResult<SecretsPresence> =>
     toWireResult(ok(deps.getSecretsPresence())),
+  );
+
+  ipcMain.handle("secrets.set", (raw: unknown): WireResult<SecretsPresence> => {
+    if (
+      typeof raw !== "object" ||
+      raw === null ||
+      typeof (raw as { key?: unknown }).key !== "string"
+    ) {
+      return toWireResult(err(domainError("ipc.bad-args", "secrets.set requires { key, value }")));
+    }
+    return deps.setSecret(raw as SecretsSetRequest);
+  });
+
+  ipcMain.handle("system.gpus", async (): Promise<WireResult<readonly GpuInfo[]>> =>
+    toWireResult(ok(await deps.listGpus())),
   );
 }
