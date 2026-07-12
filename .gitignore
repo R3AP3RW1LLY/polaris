@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+out/
+release/
+*.tsbuildinfo
+.turbo/
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+
+# Local data — never commit user data, databases, or trained models
+*.sqlite
+*.sqlite3
+*.db
+data/local/
+resources/models/
+*.onnx
+*.gguf
+*.ckpt
+*.pt
+
+# Secrets — never commit credentials, tokens, or webhooks
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Python sidecar environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Logs
+logs/
+*.log
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.shared.json
