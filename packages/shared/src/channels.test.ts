@@ -3,8 +3,14 @@ import { CHANNELS, envelope, isEnvelope } from "./channels.js";
 import type { AppHealth, Envelope } from "./channels.js";
 
 describe("IPC channels", () => {
-  it("the channel union is closed and currently contains exactly the Phase-0 channels", () => {
-    expect(CHANNELS).toEqual(["app.health"]);
+  it("the channel union is closed and contains exactly the registered channels", () => {
+    expect([...CHANNELS].sort()).toEqual([
+      "app.health",
+      "journal.autodetect",
+      "secrets.presence",
+      "settings.get",
+      "settings.set",
+    ]);
   });
 
   it("envelope stamps v:1, an ISO-8601 ts, the channel, and the payload", () => {
@@ -44,12 +50,12 @@ describe("IPC channels", () => {
   });
 
   it("narrowing on .channel narrows .payload (discriminated union, compile-time)", () => {
-    const e: Envelope = envelope("app.health", {
-      version: "0.1.0",
-      dbStatus: "ok",
-      journalStatus: "ok",
-    });
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- single-channel union makes this trivially true today; the check exists for when Phase 1 adds a second channel
+    // Widen to the full union via a function boundary so the narrowing below is
+    // genuine (not statically known to be a single channel).
+    const widen = (x: Envelope): Envelope => x;
+    const e = widen(
+      envelope("app.health", { version: "0.1.0", dbStatus: "ok", journalStatus: "ok" }),
+    );
     if (e.channel === "app.health") {
       // This line type-checks ONLY if narrowing works — dbStatus is a closed union.
       const s: "not-configured" | "ok" | "error" = e.payload.dbStatus;

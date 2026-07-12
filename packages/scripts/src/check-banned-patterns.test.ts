@@ -125,6 +125,18 @@ describe("findBannedPatterns (directory walk)", () => {
     expect(hits[0]?.file.replaceAll("\\", "/")).toContain("thing.test.ts");
   });
 
+  it("permits test-double vocabulary in .test.ts and .spec.ts files but not product files", () => {
+    mkdirSync(join(dir, "e2e"), { recursive: true });
+    const fakeWord = "fa" + "ke";
+    writeFileSync(join(dir, "e2e", "boot.spec.ts"), `// uses a ${fakeWord} backend\n`);
+    writeFileSync(join(dir, "e2e", "unit.test.ts"), `// uses a ${fakeWord} backend\n`);
+    expect(findBannedPatterns(dir)).toEqual([]);
+    // But a product file with the same word is flagged.
+    mkdirSync(join(dir, "src"), { recursive: true });
+    writeFileSync(join(dir, "src", "prod.ts"), `const ${fakeWord}Client = 1;\n`);
+    expect(findBannedPatterns(dir).length).toBe(1);
+  });
+
   it("skips markdown and non-source files", () => {
     writeFileSync(join(dir, "notes.md"), `${TO_DO} list\n`);
     writeFileSync(join(dir, "data.json"), `{"note": "${TO_DO}"}\n`);

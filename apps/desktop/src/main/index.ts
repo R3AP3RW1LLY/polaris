@@ -10,8 +10,11 @@ import { appendFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { APP_VERSION } from "@lodestar/shared";
 import type { Logger } from "@lodestar/shared";
-import { createDbService } from "@lodestar/core";
+import { createDbService, createSettingsService, createSecretsStore } from "@lodestar/core";
 import type { DbService } from "@lodestar/core";
+import { safeStorageBackend, fileSecretStorage } from "./secrets.js";
+import { createSettingsBridge } from "./settings-bridge.js";
+import type { SettingsBridge } from "./settings-bridge.js";
 import { acquireSingleInstance } from "./app-lifecycle.js";
 import { createMainWindow } from "./windows.js";
 import { registerIpcHandlers } from "./ipc.js";
@@ -22,6 +25,12 @@ import { getDataDir, getLogsDir } from "./paths.js";
 let mainWindow: BrowserWindow | undefined;
 let logger: Logger | undefined;
 let dbService: DbService | undefined;
+let bridge: SettingsBridge | undefined;
+
+const JOURNAL_CANDIDATES = (): string[] => {
+  const home = process.env["USERPROFILE"] ?? app.getPath("home");
+  return [join(home, "Saved Games", "Frontier Developments", "Elite Dangerous")];
+};
 
 function focusExistingWindow(): void {
   if (mainWindow === undefined) return;
@@ -91,20 +100,41 @@ async function bootstrap(): Promise<void> {
   logger.info("main.starting", { dataDir });
 
   dbService = createDbService(join(dataDir, "lodestar.sqlite3"));
+  const activeLogger = logger;
   if (dbService.status() === "ok") {
     logger.info("db.opened", { status: "ok" });
+    bridge = createSettingsBridge({
+      settings: createSettingsService(dbService.db),
+      secrets: createSecretsStore(
+        safeStorageBackend(),
+        fileSecretStorage(join(dataDir, "secrets")),
+      ),
+      journalCandidates: JOURNAL_CANDIDATES,
+      onConsentChange: (key, value) => {
+        activeLogger.warn("consent.changed", { key, value });
+      },
+    });
   } else {
     logger.error("db.open-failed", { error: String(dbService.lastError()) });
+    bridge = createSettingsBridge({
+      settings: undefined,
+      secrets: undefined,
+      journalCandidates: JOURNAL_CANDIDATES,
+    });
   }
 
+  const activeBridge = bridge;
   registerIpcHandlers(ipcMain, {
     getHealth: () =>
       buildHealth({
         version: APP_VERSION,
         db: () => dbService?.status() ?? "not-configured",
-        // The journal probe goes live in Step 0.7.
-        journal: () => "not-configured",
+        journal: () => activeBridge.probeJournal(),
       }),
+    getSettings: () => activeBridge.getSettings(),
+    setSetting: (req) => activeBridge.setSetting(req),
+    autodetectJournal: () => activeBridge.autodetectJournal(),
+    getSecretsPresence: () => activeBridge.secretsPresence(),
   });
 
   app.on("will-quit", () => {

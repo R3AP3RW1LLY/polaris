@@ -64,7 +64,8 @@ function normalizeLine(line: string): string {
 }
 
 function isTestFile(path: string): boolean {
-  return /\.test\.(ts|tsx|js|mjs|cjs)$/.test(path);
+  // .test.* (unit) and .spec.* (e2e) files may use test-double vocabulary.
+  return /\.(test|spec)\.(ts|tsx|js|mjs|cjs)$/.test(path);
 }
 
 export function scanContent(content: string, isTest = false): { line: number; match: string }[] {
