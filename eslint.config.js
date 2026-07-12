@@ -3,6 +3,8 @@
 // tests, no enums. Prettier disables stylistic conflicts.
 import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
+import react from "eslint-plugin-react";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 import prettier from "eslint-config-prettier";
 
@@ -54,10 +56,22 @@ export default tseslint.config(
   },
   {
     files: ["**/*.tsx"],
+    ...react.configs.flat.recommended,
+    // Explicit version — plugin's auto-detect crashes under ESLint 10.
+    settings: { react: { version: "19.2" } },
+  },
+  {
+    files: ["**/*.tsx"],
+    ...jsxA11y.flatConfigs.recommended,
+  },
+  {
+    files: ["**/*.tsx"],
     plugins: { "react-hooks": reactHooks },
     rules: {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "error",
+      // The new JSX transform needs no React import.
+      "react/react-in-jsx-scope": "off",
     },
   },
   {

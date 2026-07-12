@@ -1,0 +1,52 @@
+/* Self-hosted display + mono fonts (no egress — bundled woff2 via @fontsource). */
+@import "@fontsource/orbitron/400.css";
+@import "@fontsource/orbitron/700.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/700.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Non-palette tokens only. Palette hexes live once in tailwind-preset.ts and are
+   referenced below via theme() so there is no duplicated source of truth. */
+:root {
+  --lode-scanline: rgba(0, 0, 0, 0.28);
+}
+
+@layer base {
+  body {
+    margin: 0;
+    background: theme("colors.void.DEFAULT");
+    color: theme("colors.orange.DEFAULT");
+    font-family: theme("fontFamily.mono");
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  /* Angular clipped panel corners — the MFD signature shape. */
+  .clip-mfd {
+    clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+  }
+
+  /* Subtle CRT scanline overlay. */
+  .scanlines {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 2px,
+      var(--lode-scanline) 3px
+    );
+  }
+}
+
+/* Respect the OS/user reduced-motion preference app-wide (Step 11.2 hook). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

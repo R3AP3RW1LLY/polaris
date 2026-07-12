@@ -20,3 +20,5 @@ export type { LogLevel, LogFields, Logger } from "./logging.js";
 export { LOG_LEVELS, nullLogger } from "./logging.js";
 export type { AppHealth, ChannelPayloads, Channel, Envelope, EnvelopeShape } from "./channels.js";
 export { CHANNELS, envelope, isEnvelope } from "./channels.js";
+export type { DataAge, DataAgeLevel } from "./data-age.js";
+export { classifyDataAge } from "./data-age.js";
