@@ -1,0 +1,10 @@
+node_modules/
+dist/
+out/
+build/
+coverage/
+.turbo/
+pnpm-lock.yaml
+LICENSE
+*.md
+**/test/fixtures/

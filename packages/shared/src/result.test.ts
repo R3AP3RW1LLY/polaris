@@ -63,9 +63,12 @@ describe("Result", () => {
   });
 
   it("fromThrowable returns ok for a value and err via the mapper for a throw", () => {
-    expect(fromThrowable(() => JSON.parse('{"a":1}') as unknown, () => "bad")).toEqual(
-      ok({ a: 1 }),
-    );
+    expect(
+      fromThrowable(
+        () => JSON.parse('{"a":1}') as unknown,
+        () => "bad",
+      ),
+    ).toEqual(ok({ a: 1 }));
     const r = fromThrowable(
       () => JSON.parse("{nope") as unknown,
       (thrown) => (thrown instanceof Error ? thrown.name : "unknown"),

@@ -49,6 +49,7 @@ describe("IPC channels", () => {
       dbStatus: "ok",
       journalStatus: "ok",
     });
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- single-channel union makes this trivially true today; the check exists for when Phase 1 adds a second channel
     if (e.channel === "app.health") {
       // This line type-checks ONLY if narrowing works — dbStatus is a closed union.
       const s: "not-configured" | "ok" | "error" = e.payload.dbStatus;
@@ -57,7 +58,7 @@ describe("IPC channels", () => {
   });
 
   it("isEnvelope accepts well-formed envelopes and rejects malformed ones", () => {
-    const good: Envelope<"app.health"> = envelope("app.health", {
+    const good: Envelope = envelope("app.health", {
       version: "0.1.0",
       dbStatus: "ok",
       journalStatus: "ok",

@@ -8,7 +8,6 @@
     "test": {
       "outputs": ["coverage/**"]
     },
-    "lint": {},
     "typecheck": {},
     "compliance": {
       "cache": false

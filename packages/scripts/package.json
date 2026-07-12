@@ -1,0 +1,19 @@
+{
+  "name": "@lodestar/scripts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Repo tooling: banned-pattern checker, dependency-direction checker, journal scrubber. Each with its own tests.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    "./banned-patterns": "./src/check-banned-patterns.ts",
+    "./dependency-direction": "./src/check-dependency-direction.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "typescript": "^5.9.3"
+  }
+}

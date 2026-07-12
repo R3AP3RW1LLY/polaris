@@ -56,7 +56,7 @@ export function envelope<C extends Channel>(
   payload: ChannelPayloads[C],
   now: () => Date = () => new Date(),
 ): Envelope<C> {
-  return { v: 1, ts: now().toISOString(), channel, payload } as Envelope<C>;
+  return { v: 1, ts: now().toISOString(), channel, payload };
 }
 
 export function isEnvelope(value: unknown): value is EnvelopeShape {

@@ -55,8 +55,7 @@ export function toWireError(error: DomainError): WireError {
 }
 
 export type WireResult<T> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly error: WireError };
+  { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: WireError };
 
 export function toWireResult<T>(result: Result<T, DomainError>): WireResult<T> {
   return result.ok

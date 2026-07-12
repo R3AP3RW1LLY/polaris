@@ -17,7 +17,13 @@ describe("branded units", () => {
   });
 
   it("tons rejects negatives, NaN, and infinities with err (never throws)", () => {
-    for (const bad of [-1, -0.0001, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+    for (const bad of [
+      -1,
+      -0.0001,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+    ]) {
       const r = tons(bad);
       expect(isErr(r)).toBe(true);
       if (!r.ok) expect(r.error.code).toBe("unit.invalid-tons");
@@ -104,16 +110,13 @@ describe("branded units", () => {
       }),
     );
     fc.assert(
-      fc.property(
-        fc.double({ min: 0, max: 1e9, noNaN: true, noDefaultInfinity: true }),
-        (n) => {
-          for (const ctor of [tons, lightYears]) {
-            const r = ctor(n);
-            expect(r.ok).toBe(true);
-            if (r.ok) expect(r.value).toBe(n);
-          }
-        },
-      ),
+      fc.property(fc.double({ min: 0, max: 1e9, noNaN: true, noDefaultInfinity: true }), (n) => {
+        for (const ctor of [tons, lightYears]) {
+          const r = ctor(n);
+          expect(r.ok).toBe(true);
+          if (r.ok) expect(r.value).toBe(n);
+        }
+      }),
     );
     fc.assert(
       fc.property(fc.integer({ min: 0, max: Number.MAX_SAFE_INTEGER }), (n) => {

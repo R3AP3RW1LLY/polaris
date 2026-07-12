@@ -9,15 +9,21 @@ describe("logging contract", () => {
 
   it("nullLogger implements every level as a safe no-op", () => {
     for (const level of LOG_LEVELS) {
-      expect(() => nullLogger[level]("message", { key: "value" })).not.toThrow();
-      expect(() => nullLogger[level]("message")).not.toThrow();
+      expect(() => {
+        nullLogger[level]("message", { key: "value" });
+      }).not.toThrow();
+      expect(() => {
+        nullLogger[level]("message");
+      }).not.toThrow();
     }
   });
 
   it("nullLogger.child returns a Logger that is also a no-op", () => {
     const child: Logger = nullLogger.child({ module: "test" });
     for (const level of LOG_LEVELS) {
-      expect(() => child[level]("m")).not.toThrow();
+      expect(() => {
+        child[level]("m");
+      }).not.toThrow();
     }
   });
 });

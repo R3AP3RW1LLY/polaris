@@ -17,18 +17,23 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "test": "turbo run test",
-    "lint": "turbo run lint",
+    "lint": "eslint . --max-warnings 0 && prettier --check . && node packages/scripts/src/check-banned-patterns.ts && node packages/scripts/src/check-dependency-direction.ts",
     "typecheck": "turbo run typecheck",
     "compliance": "turbo run compliance"
   },
   "devDependencies": {
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
     "@types/node": "^26.1.1",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.7.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "fast-check": "^4.9.0",
+    "prettier": "^3.9.5",
     "turbo": "^2.10.4",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.63.0",
     "vitest": "^4.1.10"
-  }
+  },
+  "type": "module"
 }

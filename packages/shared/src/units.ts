@@ -25,7 +25,9 @@ function normalizeZero(value: number): number {
 /** Cargo/refined mass in tons: finite and non-negative. */
 export function tons(value: number): Result<Tons, DomainError> {
   if (!Number.isFinite(value) || value < 0) {
-    return err(domainError("unit.invalid-tons", `Tons must be a finite number >= 0, got ${String(value)}`));
+    return err(
+      domainError("unit.invalid-tons", `Tons must be a finite number >= 0, got ${String(value)}`),
+    );
   }
   return ok(normalizeZero(value) as Tons);
 }
@@ -38,7 +40,10 @@ export function tons(value: number): Result<Tons, DomainError> {
 export function credits(value: number): Result<Credits, DomainError> {
   if (!Number.isSafeInteger(value) || value < 0) {
     return err(
-      domainError("unit.invalid-credits", `Credits must be a safe integer >= 0, got ${String(value)}`),
+      domainError(
+        "unit.invalid-credits",
+        `Credits must be a safe integer >= 0, got ${String(value)}`,
+      ),
     );
   }
   return ok(normalizeZero(value) as Credits);
@@ -48,7 +53,10 @@ export function credits(value: number): Result<Credits, DomainError> {
 export function lightYears(value: number): Result<LightYears, DomainError> {
   if (!Number.isFinite(value) || value < 0) {
     return err(
-      domainError("unit.invalid-light-years", `LightYears must be a finite number >= 0, got ${String(value)}`),
+      domainError(
+        "unit.invalid-light-years",
+        `LightYears must be a finite number >= 0, got ${String(value)}`,
+      ),
     );
   }
   return ok(normalizeZero(value) as LightYears);
@@ -62,7 +70,10 @@ export function lightYears(value: number): Result<LightYears, DomainError> {
 export function percent(value: number): Result<Percent, DomainError> {
   if (!Number.isFinite(value) || value < 0 || value > 100) {
     return err(
-      domainError("unit.invalid-percent", `Percent must be a finite number in 0..100, got ${String(value)}`),
+      domainError(
+        "unit.invalid-percent",
+        `Percent must be a finite number in 0..100, got ${String(value)}`,
+      ),
     );
   }
   return ok(normalizeZero(value) as Percent);
