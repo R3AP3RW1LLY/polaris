@@ -20,7 +20,9 @@ export function hostAllowlist(hosts: readonly string[]): HostAllowlist {
   return Object.freeze({ has: (host: string) => set.has(host) });
 }
 
-export const RUNTIME_ALLOWLIST: HostAllowlist = hostAllowlist([
+// Frozen host arrays are exported for the compliance scanner (the HostAllowlist
+// wrapper is deliberately non-enumerable). They are the single source of truth.
+export const RUNTIME_HOSTS: readonly string[] = Object.freeze([
   "www.edsm.net",
   "spansh.co.uk",
   "inara.cz",
@@ -30,7 +32,7 @@ export const RUNTIME_ALLOWLIST: HostAllowlist = hostAllowlist([
   "discord.com",
 ]);
 
-export const INSTALL_ALLOWLIST: HostAllowlist = hostAllowlist([
+export const INSTALL_HOSTS: readonly string[] = Object.freeze([
   "github.com",
   "objects.githubusercontent.com",
   "huggingface.co",
@@ -39,6 +41,9 @@ export const INSTALL_ALLOWLIST: HostAllowlist = hostAllowlist([
   "pypi.org",
   "files.pythonhosted.org",
 ]);
+
+export const RUNTIME_ALLOWLIST: HostAllowlist = hostAllowlist(RUNTIME_HOSTS);
+export const INSTALL_ALLOWLIST: HostAllowlist = hostAllowlist(INSTALL_HOSTS);
 
 /**
  * Hosts that must NEVER appear in any allowlist. This is asserted by the

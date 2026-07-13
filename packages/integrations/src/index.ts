@@ -1,4 +1,12 @@
-export { RUNTIME_ALLOWLIST, INSTALL_ALLOWLIST, DENIED_AI_HOSTS } from "./gateway/allowlist.js";
+export {
+  RUNTIME_ALLOWLIST,
+  INSTALL_ALLOWLIST,
+  RUNTIME_HOSTS,
+  INSTALL_HOSTS,
+  DENIED_AI_HOSTS,
+  hostAllowlist,
+} from "./gateway/allowlist.js";
+export type { HostAllowlist } from "./gateway/allowlist.js";
 export { guardUrl } from "./gateway/url-guard.js";
 export type { GuardOptions } from "./gateway/url-guard.js";
 export { createGateway } from "./gateway/gateway.js";

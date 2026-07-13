@@ -1,0 +1,17 @@
+{
+  "name": "@lodestar/compliance",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The compliance suite: source/AST + runtime scans enforcing no-cloud-AI, egress confinement, no secrets, and the ToS guardrails. Runs uncached; failing compliance blocks every merge.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "compliance": "vitest run"
+  },
+  "dependencies": {
+    "@lodestar/integrations": "workspace:*",
+    "@lodestar/scripts": "workspace:*",
+    "@lodestar/shared": "workspace:*"
+  }
+}
