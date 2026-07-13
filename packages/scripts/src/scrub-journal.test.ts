@@ -257,3 +257,24 @@ describe("committed fixture corpus carries no PII", () => {
     }
   });
 });
+
+describe("committed live-file fixtures carry no PII", () => {
+  const LIVEFILE_DIR = fileURLToPath(
+    new URL("../../core/test/fixtures/livefiles/", import.meta.url),
+  );
+  const files = readdirSync(LIVEFILE_DIR).filter((f) => f.endsWith(".json"));
+
+  it("finds live-file fixtures to gate (Status.json captures etc.)", () => {
+    expect(files.length).toBeGreaterThan(0);
+  });
+
+  it("every committed live-file fixture returns zero PII leaks (no Balance, synthetic timestamp)", () => {
+    for (const name of files) {
+      const evt = JSON.parse(readFileSync(join(LIVEFILE_DIR, name), "utf8")) as Record<
+        string,
+        unknown
+      >;
+      expect(findPiiLeaks(evt), name).toEqual([]);
+    }
+  });
+});

@@ -13,101 +13,13 @@
  */
 
 import { domainError, err, nullLogger, ok } from "@lodestar/shared";
-import type { DomainError, Logger, ParsedJournalEvent, Result, Vec3 } from "@lodestar/shared";
+import type { DomainError, Logger, ParsedJournalEvent, Result } from "@lodestar/shared";
+import { ParseError, Reader, opt } from "../../util/reader.js";
 
-class ParseError extends Error {
-  constructor(
-    readonly field: string,
-    readonly reason: string,
-  ) {
-    super(`${field}: ${reason}`);
-    this.name = "ParseError";
-  }
-}
-
-class Reader {
-  constructor(
-    private readonly obj: Readonly<Record<string, unknown>>,
-    private readonly prefix = "",
-  ) {}
-
-  has(key: string): boolean {
-    return this.obj[key] !== undefined;
-  }
-
-  string(key: string): string {
-    const v = this.obj[key];
-    if (typeof v !== "string") throw new ParseError(this.prefix + key, "expected string");
-    return v;
-  }
-
-  number(key: string): number {
-    const v = this.obj[key];
-    if (typeof v !== "number" || !Number.isFinite(v))
-      throw new ParseError(this.prefix + key, "expected number");
-    return v;
-  }
-
-  boolean(key: string): boolean {
-    const v = this.obj[key];
-    if (typeof v !== "boolean") throw new ParseError(this.prefix + key, "expected boolean");
-    return v;
-  }
-
-  optionalString(key: string): string | undefined {
-    const v = this.obj[key];
-    if (v === undefined) return undefined;
-    if (typeof v !== "string") throw new ParseError(this.prefix + key, "expected string or absent");
-    return v;
-  }
-
-  optionalNumber(key: string): number | undefined {
-    const v = this.obj[key];
-    if (v === undefined) return undefined;
-    if (typeof v !== "number" || !Number.isFinite(v))
-      throw new ParseError(this.prefix + key, "expected number or absent");
-    return v;
-  }
-
-  vec3(key: string): Vec3 {
-    const v = this.obj[key];
-    if (
-      !Array.isArray(v) ||
-      v.length !== 3 ||
-      v.some((n) => typeof n !== "number" || !Number.isFinite(n))
-    ) {
-      throw new ParseError(this.prefix + key, "expected [number, number, number]");
-    }
-    return [v[0] as number, v[1] as number, v[2] as number];
-  }
-
-  child(key: string): Reader {
-    const v = this.obj[key];
-    if (typeof v !== "object" || v === null || Array.isArray(v))
-      throw new ParseError(this.prefix + key, "expected object");
-    return new Reader(v as Record<string, unknown>, `${this.prefix}${key}.`);
-  }
-
-  objectArray<T>(key: string, map: (child: Reader) => T): T[] {
-    const v = this.obj[key];
-    if (!Array.isArray(v)) throw new ParseError(this.prefix + key, "expected array");
-    return v.map((item, i) => {
-      if (typeof item !== "object" || item === null || Array.isArray(item))
-        throw new ParseError(`${this.prefix}${key}[${String(i)}]`, "expected object");
-      return map(
-        new Reader(item as Record<string, unknown>, `${this.prefix}${key}[${String(i)}].`),
-      );
-    });
-  }
-}
-
-/** Include `[key]: value` only when value is defined (respects exactOptionalPropertyTypes). */
-function opt<K extends string, V>(
-  key: K,
-  value: V | undefined,
-): Record<K, V> | Record<never, never> {
-  return value === undefined ? {} : { [key]: value };
-}
+const vec3 = (r: Reader, key: string): [number, number, number] => {
+  const [x, y, z] = r.numberTuple(key, 3);
+  return [x ?? 0, y ?? 0, z ?? 0];
+};
 
 type EventParser = (r: Reader, timestamp: string) => ParsedJournalEvent;
 
@@ -236,7 +148,7 @@ const PARSERS: Readonly<Record<string, EventParser>> = {
     timestamp,
     starSystem: r.string("StarSystem"),
     systemAddress: r.number("SystemAddress"),
-    starPos: r.vec3("StarPos"),
+    starPos: vec3(r, "StarPos"),
     jumpDist: r.number("JumpDist"),
     fuelUsed: r.number("FuelUsed"),
     fuelLevel: r.number("FuelLevel"),
@@ -260,7 +172,7 @@ const PARSERS: Readonly<Record<string, EventParser>> = {
     timestamp,
     starSystem: r.string("StarSystem"),
     systemAddress: r.number("SystemAddress"),
-    starPos: r.vec3("StarPos"),
+    starPos: vec3(r, "StarPos"),
     docked: r.boolean("Docked"),
     ...opt("body", r.optionalString("Body")),
     ...opt("bodyType", r.optionalString("BodyType")),
