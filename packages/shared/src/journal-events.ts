@@ -153,6 +153,8 @@ export interface LocationEvent {
   readonly docked: boolean;
   readonly body?: string;
   readonly bodyType?: string;
+  /** Present when the game starts docked (Location carries the station then). */
+  readonly stationName?: string;
 }
 
 export interface LoadGameEvent {

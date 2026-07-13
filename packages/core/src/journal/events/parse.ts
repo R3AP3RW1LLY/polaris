@@ -176,6 +176,7 @@ const PARSERS: Readonly<Record<string, EventParser>> = {
     docked: r.boolean("Docked"),
     ...opt("body", r.optionalString("Body")),
     ...opt("bodyType", r.optionalString("BodyType")),
+    ...opt("stationName", r.optionalString("StationName")),
   }),
   LoadGame: (r, timestamp) => ({
     event: "LoadGame",

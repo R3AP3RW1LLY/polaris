@@ -19,3 +19,11 @@ export {
   parseNavRoute,
   parseModules,
 } from "./livefiles/index.js";
+export {
+  reduce,
+  foldState,
+  reduceShip,
+  reduceLocation,
+  reduceCargo,
+  classifyActivity,
+} from "./state/index.js";
