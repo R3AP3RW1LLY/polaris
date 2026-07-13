@@ -58,3 +58,17 @@ export type {
   ParsedJournalEvent,
   KnownJournalEventName,
 } from "./journal-events.js";
+export type {
+  StatusFlags,
+  StatusFlags2,
+  Pips,
+  StatusSnapshot,
+  CargoItem,
+  CargoSnapshot,
+  MarketItem,
+  MarketSnapshot,
+  NavRouteHop,
+  NavRouteSnapshot,
+  ModuleInfo,
+  ModulesSnapshot,
+} from "./livefiles.js";
