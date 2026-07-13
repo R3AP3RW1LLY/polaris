@@ -72,3 +72,13 @@ export type {
   ModuleInfo,
   ModulesSnapshot,
 } from "./livefiles.js";
+export type {
+  ShipState,
+  LocationState,
+  CargoLineState,
+  CargoState,
+  Activity,
+  RootState,
+  StateInput,
+} from "./state.js";
+export { initialRootState } from "./state.js";
