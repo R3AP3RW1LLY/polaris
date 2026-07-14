@@ -39,6 +39,7 @@ function stubApi(over: Partial<LodestarApi> = {}): LodestarApi {
       { id: "en_US-libritts-high", displayName: "LibriTTS" },
     ]),
     onTtsAudio: vi.fn(() => () => {}),
+    onAssayVerdict: vi.fn(() => () => {}),
     ...over,
   };
   (globalThis as unknown as { window: { lodestar: LodestarApi } }).window.lodestar = api;

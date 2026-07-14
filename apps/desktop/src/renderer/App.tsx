@@ -5,6 +5,7 @@ import { StatusBar } from "./components/StatusBar.js";
 import { ModuleView } from "./routes.js";
 import type { ModuleId } from "./modules.js";
 import { useTtsAudio } from "./audio/use-tts-audio.js";
+import { subscribeAssayVerdicts } from "./stores/assay.js";
 
 const HEALTH_POLL_MS = 5000;
 
@@ -17,6 +18,19 @@ export function App(): React.JSX.Element {
   const [health, setHealth] = useState<AppHealth | null>(null);
   const [connectionLost, setConnectionLost] = useState(false);
   useTtsAudio();
+
+  // Accumulate Assay verdicts app-level so history survives screen switches.
+  useEffect(() => {
+    let off = (): void => {};
+    try {
+      off = subscribeAssayVerdicts(window.lodestar);
+    } catch {
+      /* bridge unavailable — the Assay screen still renders the empty state */
+    }
+    return () => {
+      off();
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

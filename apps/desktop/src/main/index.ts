@@ -219,6 +219,10 @@ async function bootstrap(): Promise<void> {
       onVerdict: (verdict) => {
         ttsService.onVerdict(verdict);
         stateBridge.touchSession(); // stream the updated prospector stats
+        // Push the verdict to the Assay dashboard (Step 2.9).
+        if (!window.isDestroyed()) {
+          window.webContents.send("assay.verdict", envelope("assay.verdict", verdict));
+        }
       },
       logger: log,
     });

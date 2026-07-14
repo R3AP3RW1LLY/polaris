@@ -28,11 +28,13 @@ function installedFs(present: boolean): PiperFs {
 
 const MINE: AssayVerdict = {
   prospectId: 1,
-  sessionId: 1,
   call: "MINE",
   score: 0,
   method: "laser",
   timestamp: "2025-06-01T12:00:00Z",
+  content: "$AsteroidMaterialContent_High;",
+  remainingPct: 100,
+  materials: [{ name: "platinum", displayName: "Platinum", proportion: 32 }],
   reasons: [
     {
       code: "proportion-above-threshold",

@@ -8,6 +8,7 @@
 
 import type {
   AppHealth,
+  AssayVerdictEvent,
   Channel,
   GpuInfo,
   RootState,
@@ -50,6 +51,8 @@ export interface LodestarApi {
   listVoices: () => Promise<readonly TtsVoiceOption[]>;
   /** Subscribe to synthesized verdict callouts pushed from main (for playback). */
   onTtsAudio: (cb: (audio: TtsAudio) => void) => Unsubscribe;
+  /** Subscribe to Assay verdicts pushed from main (for the Assay dashboard). */
+  onAssayVerdict: (cb: (verdict: AssayVerdictEvent) => void) => Unsubscribe;
 }
 
 export const EXPOSED_API_KEYS = [
@@ -66,6 +69,7 @@ export const EXPOSED_API_KEYS = [
   "testTts",
   "listVoices",
   "onTtsAudio",
+  "onAssayVerdict",
 ] as const satisfies readonly (keyof LodestarApi)[];
 
 function unwrap<T>(wire: WireResult<T>): T {
@@ -110,6 +114,10 @@ export function createLodestarApi(ipc: IpcInvoker): LodestarApi {
     onTtsAudio: (cb) =>
       subscribe("tts.audio", (p) => {
         cb(p as TtsAudio);
+      }),
+    onAssayVerdict: (cb) =>
+      subscribe("assay.verdict", (p) => {
+        cb(p as AssayVerdictEvent);
       }),
   };
 }

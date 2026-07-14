@@ -43,6 +43,7 @@ function stubApi(over: Partial<LodestarApi> = {}): void {
       { id: "en_US-libritts-high", displayName: "LibriTTS" },
     ]),
     onTtsAudio: vi.fn(() => () => {}),
+    onAssayVerdict: vi.fn(() => () => {}),
     ...over,
   };
   (globalThis as unknown as { window: { lodestar: LodestarApi } }).window.lodestar = api;
@@ -130,7 +131,7 @@ describe("App shell", () => {
   it("shows an 'arrives in Phase N' notice for an unbuilt module (no dead link)", () => {
     stubApi();
     render(<App />);
-    // Assay's nav button is disabled; the nav communicates the arrival phase.
-    expect(screen.getByRole("button", { name: /assay/i })).toHaveTextContent(/phase 2/i);
+    // Manifest's nav button is disabled; the nav communicates the arrival phase.
+    expect(screen.getByRole("button", { name: /manifest/i })).toHaveTextContent(/phase 3/i);
   });
 });

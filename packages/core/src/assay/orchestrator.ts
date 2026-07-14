@@ -25,8 +25,8 @@
  * a bad prospect is logged and the next one still assays.
  */
 
-import { nullLogger } from "@lodestar/shared";
-import type { Logger, MiningMethod } from "@lodestar/shared";
+import { commodityFromInternal, nullLogger } from "@lodestar/shared";
+import type { AssayMaterial, AssayVerdictEvent, Logger, MiningMethod } from "@lodestar/shared";
 import { assay, mergeThresholds } from "@lodestar/intelligence";
 import type { Reason } from "@lodestar/intelligence";
 import type { EventBus } from "../bus/event-bus.js";
@@ -54,25 +54,20 @@ export interface CrackedEvent {
   readonly sessionId: number | undefined;
 }
 
-/** The Assay verdict for a prospect, published on the bus (forwarded to IPC/WS by the wiring). */
-export interface AssayVerdict {
-  readonly prospectId: number;
-  readonly sessionId: number | undefined;
-  readonly call: "MINE" | "SKIP";
-  /** Price-weighted expected value per ton — higher is better (ranking). */
-  readonly score: number;
-  readonly reasons: readonly Reason[];
-  readonly method: MiningMethod;
-  /** The prospect's own observation timestamp (age-honest). */
-  readonly timestamp: string;
-}
+/**
+ * The Assay verdict for a prospect, published on the bus + forwarded to IPC (the
+ * Assay dashboard, 2.9) and the speech queue. It IS the shared wire type — carries
+ * the composition/content the UI renders; `reasons` widen from the Layer-1 `Reason`
+ * union to the flat wire `AssayReason`.
+ */
+export type AssayVerdict = AssayVerdictEvent;
 
 /** The bus channels the Assay pipeline consumes (`prospected`/`refined`/`cracked`) and produces (`verdict`). */
 export interface AssayEvents {
   readonly prospected: ProspectedEvent;
   readonly refined: RefinedEvent;
   readonly cracked: CrackedEvent;
-  readonly verdict: AssayVerdict;
+  readonly verdict: AssayVerdictEvent;
 }
 
 export interface AssayOrchestratorOptions {
@@ -84,7 +79,7 @@ export interface AssayOrchestratorOptions {
   readonly priceBook: PriceResolver;
   readonly logger?: Logger;
   /** Speech callout hook — the Piper speech queue (2.7) subscribes here once present. */
-  readonly speak?: (verdict: AssayVerdict) => void;
+  readonly speak?: (verdict: AssayVerdictEvent) => void;
 }
 
 export interface AssayOrchestrator {
@@ -137,14 +132,24 @@ export function createAssayOrchestrator(opts: AssayOrchestratorOptions): AssayOr
         open = { id, sessionId: evt.sessionId, commodityIds: mineCommodityIds(verdict.reasons) };
       }
 
-      const emitted: AssayVerdict = {
+      const materials: AssayMaterial[] = evt.prospect.materials.map((m) => {
+        const r = commodityFromInternal(m.name);
+        return {
+          name: m.name,
+          displayName: r.ok ? r.commodity.displayName : m.name,
+          proportion: m.proportion,
+        };
+      });
+      const emitted: AssayVerdictEvent = {
         prospectId: id,
-        sessionId: evt.sessionId,
         call: verdict.call,
         score: verdict.score,
-        reasons: verdict.reasons,
+        reasons: verdict.reasons, // Layer-1 Reason[] widens to the flat wire AssayReason[]
         method: evt.method,
         timestamp: evt.prospect.timestamp,
+        content: evt.prospect.content,
+        remainingPct: evt.prospect.remainingPct,
+        materials,
       };
       opts.speak?.(emitted);
       // Re-entrant publish is queued + drained FIFO by the bus — safe from here.

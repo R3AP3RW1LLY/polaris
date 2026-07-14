@@ -12,6 +12,7 @@
 import type { RootState } from "./state.js";
 import type { StateDelta } from "./state-delta.js";
 import type { SessionSummary } from "./session.js";
+import type { AssayVerdictEvent } from "./assay.js";
 
 export interface AppHealth {
   readonly version: string;
@@ -96,6 +97,8 @@ export interface ChannelPayloads {
   readonly "tts.test": TtsTestResult;
   readonly "tts.audio": TtsAudio;
   readonly "tts.voices": readonly TtsVoiceOption[];
+  // Step 2.9 — Assay verdicts pushed to the renderer (main→renderer) for the dashboard.
+  readonly "assay.verdict": AssayVerdictEvent;
 }
 
 const CHANNEL_SET = {
@@ -112,6 +115,7 @@ const CHANNEL_SET = {
   "tts.test": true,
   "tts.audio": true,
   "tts.voices": true,
+  "assay.verdict": true,
 } as const satisfies Record<keyof ChannelPayloads, true>;
 
 export type Channel = keyof ChannelPayloads;

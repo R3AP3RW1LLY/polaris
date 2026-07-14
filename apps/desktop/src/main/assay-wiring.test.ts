@@ -157,6 +157,30 @@ describe("assay wiring (engine → bus → orchestrator → tts)", () => {
     wiring.dispose();
   });
 
+  it("latency: parsed prospect → verdict delivered is ≤150ms p95 (real clock, no injected timers)", () => {
+    const { engine, fire, setSession } = fakeEngine();
+    const latencies: number[] = [];
+    let t0 = 0;
+    const wiring = wireAssay({
+      engine,
+      db,
+      onVerdict: () => latencies.push(performance.now() - t0),
+      logger: nullLogger,
+    });
+    setSession(sessionId);
+    // Push 200 parsed prospects through the REAL wiring → bus → orchestrator → verdict
+    // engine, timing each parsed-event → verdict-delivered leg with the real clock.
+    for (let i = 0; i < 200; i += 1) {
+      t0 = performance.now();
+      fire(prospected());
+    }
+    expect(latencies).toHaveLength(200);
+    const sorted = [...latencies].sort((a, b) => a - b);
+    const p95 = sorted[Math.floor(sorted.length * 0.95)] ?? Infinity;
+    expect(p95).toBeLessThanOrEqual(150);
+    wiring.dispose();
+  });
+
   it("dispose() unsubscribes — later events produce no more verdicts", () => {
     const { engine, fire, setSession } = fakeEngine();
     const verdicts: AssayVerdict[] = [];
