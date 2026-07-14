@@ -30,6 +30,8 @@ import {
 } from "./aggregates.js";
 import { assembleBreakdowns } from "./breakdowns.js";
 import type { Breakdowns, SessionBreakdownInput } from "./breakdowns.js";
+import { ringCommodityHeatmap, timeProductivityHeatmap } from "./heatmaps.js";
+import type { Heatmaps, YieldInput } from "./heatmaps.js";
 
 const PROSPECTED_SUB = "(SELECT COUNT(*) FROM prospects p WHERE p.session_id = s.id)";
 const MINE_SUB =
@@ -49,6 +51,14 @@ export function listSessionsSql(where: string): string {
 /** Per-session refined tons grouped by commodity (seeks `refinements` via its index). */
 export const REFINEMENTS_BY_COMMODITY_SQL =
   "SELECT commodity, SUM(tons) AS tons FROM refinements WHERE session_id = @id GROUP BY commodity ORDER BY tons DESC, commodity";
+
+/** Ring × commodity refined-tons yield for a WHERE clause; reaches `refinements` via its index. */
+export function HEATMAP_YIELD_SQL(where: string): string {
+  return `SELECT s.ring AS ring, r.commodity AS commodity, SUM(r.tons) AS tons
+     FROM sessions s JOIN refinements r ON r.session_id = s.id
+     WHERE ${where}
+     GROUP BY s.ring, r.commodity`;
+}
 
 /** A session's dominant (highest-tonnage) commodity (seeks `refinements` via its index). */
 export const DOMINANT_COMMODITY_SQL =
@@ -83,6 +93,8 @@ export interface AnalyticsRepository {
   trend: (filter?: SessionFilter) => TrendPoint[];
   /** Per-commodity / ring / ship breakdowns + best (ring × commodity) pairings. */
   breakdowns: (filter?: SessionFilter) => Breakdowns;
+  /** Time-productivity (day×hour) + ring×commodity yield heatmaps. */
+  heatmaps: (filter?: SessionFilter) => Heatmaps;
 }
 
 export function createAnalyticsRepository(db: Db): AnalyticsRepository {
@@ -121,6 +133,22 @@ export function createAnalyticsRepository(db: Db): AnalyticsRepository {
         };
       });
       return assembleBreakdowns(inputs);
+    },
+    heatmaps: (filter = {}) => {
+      const sessions = list(filter);
+      const yields = db
+        .prepare(HEATMAP_YIELD_SQL(buildSessionWhere(filter).sql))
+        .all(buildSessionWhere(filter).params) as YieldInput[];
+      return {
+        timeProductivity: timeProductivityHeatmap(
+          sessions.map((s) => ({
+            startedAt: s.startedAt,
+            tonsRefined: s.tonsRefined,
+            durationSec: s.durationSec,
+          })),
+        ),
+        ringCommodityYield: ringCommodityHeatmap(yields),
+      };
     },
     sessionDetail: (id) => {
       const session = detailRow(id);

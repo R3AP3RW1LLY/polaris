@@ -93,5 +93,7 @@ export type {
   BreakdownRow,
   PairingRow,
   Breakdowns,
+  Heatmap,
+  Heatmaps,
 } from "./analytics/index.js";
 export { createAnalyticsRepository } from "./analytics/index.js";
