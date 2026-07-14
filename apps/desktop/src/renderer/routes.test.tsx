@@ -19,8 +19,8 @@ afterEach(cleanup);
 
 describe("ModuleView", () => {
   it("renders the 'arrives in Phase N' notice for an unbuilt module (defense-in-depth path)", () => {
-    render(<ModuleView active="assay" />);
-    expect(screen.getByText(/arrives in/i)).toHaveTextContent(/phase 2/i);
+    render(<ModuleView active="manifest" />);
+    expect(screen.getByText(/arrives in/i)).toHaveTextContent(/phase 3/i);
   });
 
   it("renders the Command Deck for the command-deck module", () => {

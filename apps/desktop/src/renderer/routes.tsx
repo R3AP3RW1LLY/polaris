@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { CommandDeck } from "./screens/CommandDeck.js";
 import { Settings } from "./screens/Settings.js";
+import { Assay } from "./screens/Assay.js";
 import { moduleById } from "./modules.js";
 import type { ModuleId } from "./modules.js";
 import { MfdPanel } from "./components/MfdPanel.js";
@@ -13,6 +14,7 @@ import { MfdPanel } from "./components/MfdPanel.js";
  */
 export const MODULE_SCREENS: Partial<Record<ModuleId, ComponentType>> = {
   "command-deck": CommandDeck,
+  assay: Assay,
   settings: Settings,
 };
 
