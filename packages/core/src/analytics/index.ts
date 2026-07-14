@@ -26,3 +26,5 @@ export {
 } from "./repository.js";
 export type { SessionBreakdownInput, BreakdownRow, PairingRow, Breakdowns } from "./breakdowns.js";
 export { foldBreakdown, foldPairings, assembleBreakdowns } from "./breakdowns.js";
+export type { Heatmap, Heatmaps, TimeSlotInput, YieldInput } from "./heatmaps.js";
+export { timeProductivityHeatmap, ringCommodityHeatmap } from "./heatmaps.js";
